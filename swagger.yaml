@@ -1,0 +1,141 @@
+openapi: 3.0.0
+info:
+  title: Task Queue System API
+  description: Priority-based task queue with rate limiting
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local server
+
+tags:
+  - name: Tasks
+    description: Task management endpoints
+  - name: Metrics
+    description: System metrics endpoints
+
+paths:
+  /tasks:
+    post:
+      tags:
+        - Tasks
+      summary: Add a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - priority
+                - payload
+              properties:
+                type:
+                  type: string
+                  enum: [sms, email, webhook]
+                priority:
+                  type: string
+                  enum: [high, medium, low]
+                payload:
+                  type: object
+            example:
+              type: "email"
+              priority: "high"
+              payload:
+                to: "user@example.com"
+                subject: "Hello"
+      responses:
+        '201':
+          description: Task created successfully
+        '400':
+          description: Validation error
+
+    get:
+      tags:
+        - Tasks
+      summary: Get all tasks with filtering and pagination
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [sms, email, webhook]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [high, medium, low]
+      responses:
+        '200':
+          description: Tasks retrieved successfully
+
+  /tasks/{id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get task by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task retrieved successfully
+        '404':
+          description: Task not found
+
+    delete:
+      tags:
+        - Tasks
+      summary: Delete task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task deleted successfully
+        '404':
+          description: Task not found
+
+  /metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Get system metrics
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: object
+                  queue:
+                    type: object
+                  rateLimits:
+                    type: object
+                  processing:
+                    type: object
